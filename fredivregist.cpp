@@ -78,22 +78,18 @@
       } // --- end of proposal_create ---
 
 
-      /*-------------------
+      /*
+       +-------------------
        +  proposal_clear
        +-------------------
                 +
                 +  Recycle RAM after proposal not longer needed.
                 +
                 */
-
+// wrapper
 ACTION fredivregist::proposalclr( name proposer) {
     require_auth(proposer);
-    proposal_table proposals(get_self(), get_self().value);
-    // Delete all records in _proposal table
-    auto rec_itr = proposals.begin();
-    while (rec_itr != proposals.end()) {
-      rec_itr = proposals.erase(rec_itr);
-    }
+    proposaldestroy();
 }
 
 // enforced expiration of the proposal
@@ -103,8 +99,8 @@ ACTION fredivregist::expire( name proposer ) {
     whitelist_index white_list(_self, _self.value);
     auto v = white_list.find(proposer.value);
     if ( v == white_list.end() ){
-        eosio::printf("Error 1 (VIP_list): You have no rights for this operation!!");
-        notefront( 1 );
+        eosio::printf("(VIP_list): You have no rights for this operation!!");
+        notify_front( 1 );
         return;
     } else { //proposer accepted
       // make proposal expired
@@ -139,7 +135,7 @@ ACTION fredivregist::expire( name proposer ) {
         auto v = white_list.find(voter.value);
         if ( v == white_list.end() ){ //wrong voter
             eosio::printf("Error 1 (VIP_list): You do not have rights for this operation!!");
-            notefront( 1 );
+            notify_front( 1 );
             return;
         }
 
@@ -160,20 +156,19 @@ ACTION fredivregist::expire( name proposer ) {
         //
         uint8_t a, b;
         v = white_list.begin()
-        v++; //ignore proposer
+        v++; //ignore proposer  //Note this may not work due to issue in eosio
         a = v->vote; //take first voter result
         v++;
         b = v->vote; //take second voter result
 
         if ( (a==1)||(b==1) ) { //proposal refused - destroy it :(
-
+          proposaldestroy();
         return;
         }
 
         if ( (a==2)&&(b==2) ) { //proposal accepted - finalize it :)
         //Copy proposal to the investors register (this is equal to minting NFT)
         rec_itr = proposal.begin();
-        //add new investor record into register
         register_table register(_self, _self.value);
         auto reg_itr = register.end();
         register.emplace(_self, [&]( auto& r ){
@@ -184,32 +179,67 @@ ACTION fredivregist::expire( name proposer ) {
           r.target_freeos_price     = rec_itr->target_freeos_price;
           r.roi_target_cap          = rec_itr->roi_target_cap;
           r.weekly_percentage       = rec_itr->weekly_percentage;
-          //Note: This register record is single NFT by itself
+          //Note: This register record is single NFT by itsel
           r.mint_date               = current_time_point_sec();
           r.locked                  = rec_itr->locked;
           r.rates_left              = rec_itr->rates_left;
-          //sharefraction - this is computed field (later)                                                     ;
-       });
-
+          //sharefraction - this is computed field (later) TODO discuss                                                     ;
+        });
+        eosio::printf("Proposal accepted and saved. NFT minted.");
+        notify_front( 5 );
+        proposaldestroy();
         }
 
+      } //end.
 
 
 
+      /* this is DIVIDEND FRAME
+      +-------------------
+      +  dividend compute
+      +-------------------
+              +
+              +  Counting and write computing code (based on prescribed policy) to each investor record.
+              +  The code is used in the next step to count the dividend.
+              +
+              */
+
+  ACTION fredivregist::dividcomputed( name dividend_acct ){
+    require_auth(_self);
+
+  } //end.
+
+      /* this is DIVIDEND FRAME
+      +-------------------
+      +  dividend delivery
+      +-------------------
+              +
+              +  The action transfer eligible amount of tokens from pre-designed account to account of each investor
+              +  according to pre-computed earlier code.
+              +
+              */
+
+  ACTION fredivregist::dividdelivery( name dividend_acct ){
+    require_auth(_self);
+
+  } //end.
 
 
-            }
+
+  ACTION fredivregist::dividendchown( name owner, name new_owner ){ // Change ownership
+    //verify existence of owner account
+    require_auth( owner );
+    //verify existence of target (new owner) account
+
+    //make Change
 
 
+    //Notify
 
 
+  }
 
 
-
-
-
-
-///ACTION // Change ownership
 
 
 
@@ -218,7 +248,7 @@ ACTION fredivregist::expire( name proposer ) {
       //                        //
 
 // List of errors to export to the frontend for interpretation
-void fredivregist::notefront( uint8_t number ){
+void fredivregist::notify_front( uint8_t number ){
   messages_table errortable(_self, _self.value);
   auto e = errortable.end();
   errortable.emplace(_self, [&](auto &e) {
@@ -227,7 +257,7 @@ void fredivregist::notefront( uint8_t number ){
   }
 } //end of.
 
-// Clear list of errors when started new proposal
+// Clear list of errors when start new proposal - no conditions verified
 void fredivregist::clearfront( void ){
   messages_table errortable(_self, _self.value);
   auto e = errortable.begin();
@@ -236,11 +266,19 @@ void fredivregist::clearfront( void ){
   }
 } //end of.
 
+// Clear/destroy proposal - Warning : this is only for internal use as it is unconditional.
+void fredivregist::proposaldestroy( void ){
+    proposal_table proposals(get_self(), get_self().value);
+    // Delete proposal - release RAM
+    auto rec_itr = proposals.begin();
+    while (rec_itr != proposals.end()) {
+      rec_itr = proposals.erase(rec_itr);
+    }
+}
 
 
 
 
 
 
-
-EOSIO_DISPATCH(fredivregist, (allowance)(proposalnew)(proposalclr))
+EOSIO_DISPATCH(fredivregist, (allowance)(proposalnew)(proposalclr))  //not finished TODO

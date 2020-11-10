@@ -57,18 +57,18 @@ TABLE proposal_struct {                     // Note: release RAM after approval
 
 TABLE register_struct {
       //Note: These two accounts also determine ownership for giving or NFT seling transaction (if any)
-      name eosaccount;                    //!< freeos account used to receive dividends and for identification
-      char policy_name;                   //!< policy_name - (a) WayFarer or (b) WayFinder
-      char user_type;                     //!< user_type -(f)ounder or (i)nvestor
+      name     eosaccount;                  //!< freeos account used to receive dividends and for identification
+      char     policy_name;                 //!< policy_name - (a) WayFarer or (b) WayFinder
+      char     user_type;                   //!< user_type -(f)ounder or (i)nvestor
       uint64_t usd_investment;
       uint32_t target_freeos_price;
-      uint8_t roi_target_cap;
-      uint8_t weekly_percentage;
+      uint8_t  roi_target_cap;
+      uint8_t  weekly_percentage;
       //Note: This register record is single NFT by itself
-      uint64_t mint_date;                 // current date (when this register record was created)
-      bool locked;                        //!< lock dividends for selected new members. Note: When unlock should be not lock again.
-      uint64_t rates_left;                // number of payments left under this policy (apply only to specific variants)
-      uint32_t sharefraction;             // which fraction of a total pool that person receives (optional for consideration).
+      uint64_t mint_date;                   // current date (when this register record was created)
+      bool     locked;                      //!< lock dividends for selected new members. Note: When unlock should be not lock again.
+      uint64_t rates_left;                  // number of payments left under this policy (apply only to specific variants)
+      uint32_t sharefraction;               // which fraction of a total pool that person receives (optional for consideration).
       uint64_t primary_key()const {return eosaccount.value;}
     };
 
