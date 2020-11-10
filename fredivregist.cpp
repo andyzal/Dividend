@@ -1,15 +1,16 @@
+// Last Edited: 1st Nov. by A.Zaliwski License: MIT
 #include <fredivregist.hpp>
 
 // Create whitelist
     ACTION fredivregist::allowance( uint64_t key, name vipname ){
-      require_auth( get_self() );  
+      require_auth( get_self() );
 
       whitelist_index white_list(get_self(), get_self().value);
 
       auto iterator = white_list.find(vipname.value);
           if( iterator == white_list.end() )
           {
-            white_list.emplace(vipname, [&]( auto& row ) 
+            white_list.emplace(vipname, [&]( auto& row )
             {
               row.key = key;
               row.vip_user = vipname;
@@ -22,7 +23,7 @@
               row.vip_user = vipname;
               row.vote = 0;
              });
-          }   
+          }
     }
 
 
@@ -38,7 +39,6 @@
       ACTION fredivregist::proposalnew(
         // Proposer entered parameters
         const name proposer,
-        const name vaccount,                      //!< DAPP account (if any)
         const name eosaccount,                    //!< freeos account used to receive dividends and for identification
         const char policy_name,                   //!< policy_name - (a)WayFarer or (b)WayFinder
         const char user_type,                     //!< user_type -(f)ounder or (i)nvestor
@@ -47,37 +47,31 @@
         const uint8_t roi_target_cap,
         const uint8_t weekly_percentage,
         const bool locked,                        //!< lock dividends for selected new members. Note: When unlock cannot be locked again.
-        const uint8_t approvals,                  // voters approvals - must be three (3) exactly! to proceed.
         const uint64_t rates_left,                // number of payments left under this policy (apply only to specific variants
-        const time_point_sec& expires_at
       ){
         require_auth(proposer);
         // Is proposer white-listed for this action?
         whitelist_index white_list(get_self(), get_self().value);
         check(white_list.find(proposer.value) == white_list.end(), " :( VIP_list: You have no rights to perform this operation!!");
-        check(expires_at > current_time_point_sec(), "expires_at must be a value in the future.");
+        //check(expires_at > current_time_point_sec(), "expires_at must be a value in the future.");
         // Assume blank proposal_struct
-        const uint64_t key = 1; 
+        const uint64_t key = 1;
         proposal_table proposals(get_self(), get_self().value);
-        check(proposals.find(key) == proposals.end(), " :( A Proposal already exists - it should be cleared out!");
+        check(proposals.find(key) == proposals.end(), " :( A Proposal already exists");
         auto p = proposals.find(key);
         if ( p == proposals.end() ){
-          // No proposal so far - create new
+          //create new proposal
           proposals.emplace(_self, [&](auto &p) {
                       p.key = 1; // Always one, if no more than one proposal at once allowed.
-                      p.vaccount = vaccount;
-                      p.eosaccount = eosaccount;
-                      p.policy_name = policy_name;
-                      p.user_type = user_type;
-                      p.usd_investment = usd_investment;
+                      p.eosaccount          = eosaccount;
+                      p.policy_name         = policy_name;
+                      p.user_type           = user_type;
+                      p.usd_investment      = usd_investment;
                       p.target_freeos_price = target_freeos_price;
-                      p.roi_target_cap = roi_target_cap;
-                      p.weekly_percentage = weekly_percentage;
-                      p.locked = locked;
-                      p.approvals = 0; // no approvals yet
-                      p.created_at = current_time_point_sec();
-                      p.expires_at = expires_at;
-
+                      p.roi_target_cap      = roi_target_cap;
+                      p.weekly_percentage   = weekly_percentage;
+                      p.locked              = locked;
+                      p.expires_at = current_time_point_sec() + EXPIRATION_PERIOD;
            });
         } //end of if
         // Notify voters using frontend when this proposal is submitted.
@@ -89,35 +83,41 @@
        +-------------------
                 +
                 +  Recycle RAM after proposal not longer needed.
-                +     
+                +
                 */
 
-      ACTION fredivregist::proposalclr() {
-        require_auth(get_self());
-
-        proposal_table proposals(get_self(), get_self().value);
-        // Delete all records in _proposal table
-        auto rec_itr = proposals.begin();
-        while (rec_itr != proposals.end()) {
-          rec_itr = proposals.erase(rec_itr);
-          }
-        }
-
-// enforced earlier expiration of a proposal
-ACTION fredivregist::expire(const name proposal_name) { //TODO change to proposer 
-    proposals proposal_table(_self, _self.value);
-    auto itr = proposal_table.find(proposal_name.value);
-
-    check(itr != proposal_table.end(), "proposal not found.");
-    check(!itr->is_expired(), "proposal is already expired.");
-
-    auto proposer = itr->proposer; //TODO this cannot be taken from proposal but from allowances table
+ACTION fredivregist::proposalclr( name proposer) {
     require_auth(proposer);
-
-    proposal_table.modify(itr, proposer, [&](auto& row) {
-        row.expires_at = current_time_point_sec();
-    });
+    proposal_table proposals(get_self(), get_self().value);
+    // Delete all records in _proposal table
+    auto rec_itr = proposals.begin();
+    while (rec_itr != proposals.end()) {
+      rec_itr = proposals.erase(rec_itr);
+    }
 }
+
+// enforced expiration of the proposal
+ACTION fredivregist::expire( name proposer ) {
+    require_auth(proposer);
+    // is proposer on white-list
+    whitelist_index white_list(_self, _self.value);
+    auto v = white_list.find(proposer.value);
+    if ( v == white_list.end() ){
+        eosio::printf("Error 1 (VIP_list): You have no rights for this operation!!");
+        notefront( 1 );
+        return;
+    } else { //proposer accepted
+      // make proposal expired
+      proposal_table proposals(_self, _self.value);
+      const uint64_t key = 1;
+      auto itr = proposals.find(key);
+      check(itr != proposals.end(), "proposal not found.");
+      check(!itr->is_expired(), "proposal is already expired."); //???
+      proposals.modify(itr, proposer, [&](auto& row) {
+        row.expires_at = current_time_point_sec();
+      });
+    }
+} //end of.
 
 
       /*
@@ -130,69 +130,111 @@ ACTION fredivregist::expire(const name proposal_name) { //TODO change to propose
               +
               */
 
-      // Only pre-defined voters can vote for the proposal. 
-      // TODO Exclude the same voter voting twice.
-
-
-      ACTION fredivregist::proposalvote(
-                                          name voter,                      //
-                                          uint8_t vote
-                                          )
+  ACTION fredivregist::proposalvote(  name    voter,
+                                      uint8_t vote   )
       {
-        
         require_auth(voter);
-        // Also verify is voter whitetlisted for this action?
+        //voter allowed?
         whitelist_index white_list(_self, _self.value);
-        check(white_list.find(voter.value) == white_list.end(), " :( VIP_list: You have no rights for this operation!!");
+        auto v = white_list.find(voter.value);
+        if ( v == white_list.end() ){ //wrong voter
+            eosio::printf("Error 1 (VIP_list): You do not have rights for this operation!!");
+            notefront( 1 );
+            return;
+        }
 
-//Whitelist will keep last voter name.    " :( VIP_list: You voted already for this proposal. This vote will be ignored!"); 
+        //voter is allowed
+        check(v->key!=1, "You are proposer not voter!");
+        //proposal expired?
+        proposal_table proposals(get_self(), get_self().value);
+        auto rec_itr = proposals.begin();
+        check(rec_itr->expires_at > current_time_point_sec(), "proposal already expired.");  //Note function TODO
 
-        check(!row.is_expired(), "cannot vote on an expired proposal.");
-// Are you the latest voter ??? :)
-        // calculate the user number when registered
-        
-        
-        
-        //First voter is different than second??
-        if ( last_vote() == true ) {
-           if ( proposal_accepted() ) {
-                copy_proposal_to_register(); // include minting
-                notice_all('accepted');  //May be not possible to do - TODO add verify result ACTION
-            } else { // proposal not accepted
-            notice_all('rejected');
-            };
-            proposal_remove();
-        } else  // not the last voter
-            update_results();
-            lock_current_voter();
-        } // end of proposal vote.
+        //is it your first vote??
+        check(v->vote==0, "This is your second vote!"); //assume: return if false (?)
 
-        //uint64_t mint_date;                 // current date (when this register record was created)
-        // When copy proposal to register also clean up the vote indicator column for whitelist to zeros. One if someone was voting. 
+        //proposal is not expired and voter is allowed - then update vote
+        white_list.modify(v,_self,[&](auto& p){  p.vote = vote; }
 
-//How to make notification if this operattion is finished??
+        //verify proposal approval or refusal
+        //
+        uint8_t a, b;
+        v = white_list.begin()
+        v++; //ignore proposer
+        a = v->vote; //take first voter result
+        v++;
+        b = v->vote; //take second voter result
 
-// proposer can have query on proposal voting and finalization results. The status of this operation should be written somewhere? Where?
+        if ( (a==1)||(b==1) ) { //proposal refused - destroy it :(
 
-///ACTION // Change ownership 
+        return;
+        }
 
-//vote and finalize proposal in one actions: If two votes positive mint NFT and create the new register entry according to proposal content.
-///Action Dividend (go through the register and divide a whole account content - make the transfers. Look at Cmichael at the "consider". 
-//the proposer may query the systems for the message log of the latest operation performed (only for the last proposal). 
-///Tasks to do
-///- Write the frame code containing logic to incorporate the two following actions:
-///- Calculate and implement the formula translating the information from investor/founder NFT into percentage of dividend 
-///from current profit account.
-///- Create inline transfer action from profit account into each NFT account from the register. (transfers amount calculated 
-// in previous step to the investor/founder - this action will be repaeted many times at once. Note time for transaction limits.
-///- Write code reporting the results of current dividend round to everybody interested and creating the log file.
-////- Write demo for potential investors to simulate the consequences of different policy strategy selection in relationships 
-///  to the freeos profits (Vue only).
-///- create action allowing NFT ownership transfer (gift or inheritance but not selling) (Also possible to transfer ownership
-///to John Doe to cancel the NFT).
-///- create NFT sell action (optional) only using Freeos tokens. 
+        if ( (a==2)&&(b==2) ) { //proposal accepted - finalize it :)
+        //Copy proposal to the investors register (this is equal to minting NFT)
+        rec_itr = proposal.begin();
+        //add new investor record into register
+        register_table register(_self, _self.value);
+        auto reg_itr = register.end();
+        register.emplace(_self, [&]( auto& r ){
+          r.eosaccount              = rec_itr->eosaccount;
+          r.policy_name             = rec_itr->policy_name;
+          r.user_type               = rec_itr->user_type;
+          r.usd_investment          = rec_itr->usd_investment;
+          r.target_freeos_price     = rec_itr->target_freeos_price;
+          r.roi_target_cap          = rec_itr->roi_target_cap;
+          r.weekly_percentage       = rec_itr->weekly_percentage;
+          //Note: This register record is single NFT by itself
+          r.mint_date               = current_time_point_sec();
+          r.locked                  = rec_itr->locked;
+          r.rates_left              = rec_itr->rates_left;
+          //sharefraction - this is computed field (later)                                                     ;
+       });
+
+        }
 
 
+
+
+
+
+            }
+
+
+
+
+
+
+
+
+
+
+///ACTION // Change ownership
+
+
+
+      //                        //
+      // Small Helper Functions //
+      //                        //
+
+// List of errors to export to the frontend for interpretation
+void fredivregist::notefront( uint8_t number ){
+  messages_table errortable(_self, _self.value);
+  auto e = errortable.end();
+  errortable.emplace(_self, [&](auto &e) {
+    e.key = e.key + 1; //verify TODO
+    e.errorno = number;
+  }
+} //end of.
+
+// Clear list of errors when started new proposal
+void fredivregist::clearfront( void ){
+  messages_table errortable(_self, _self.value);
+  auto e = errortable.begin();
+  while (e != errortable.end()) {
+      e = errortable.erase(rec_itr);
+  }
+} //end of.
 
 
 
