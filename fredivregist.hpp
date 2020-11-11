@@ -1,4 +1,4 @@
-// Last edited: 1st Nov. by A.Zaliwski  License: MIT
+// Last edited: 1st Nov. by A.Zaliwski  License: MIT   intentionally CDT ver. 1.6.3.   
 
 #include <eosio/eosio.hpp>
 #include <eosio/system.hpp>
@@ -16,7 +16,6 @@ CONTRACT fredivregist : public contract {
 
     ACTION proposalnew(                     // Proposer entered parameters
         name proposer,
-        name vaccount,                      //!< DAPP account (if any)
         name eosaccount,                    //!< freeos account used to receive dividends and for identification
         char policy_name,                   //!< policy_name - (a)WayFarer or (b)WayFinder
         char user_type,                     //!< user_type -(f)ounder or (i)nvestor
@@ -28,7 +27,22 @@ CONTRACT fredivregist : public contract {
         uint64_t rates_left                 // number of payments left under this policy (apply only to specific variants)
       );
 
+    ACTION fredivregist::proposalclr( name proposer ); //  Destroying proposal on proposer request
+
+    ACTION fredivregist::proposalvote( name voter, uint8_t vote );
+
+    ACTION fredivregist::dividcomputed( name dividend_acct );  // Compute dividend.
+
+    ACTION fredivregist::dividenddeliv( name dividend_acct ); // Assign and transfer to investor account previously computed dividend.
+
+    ACTION fredivregist::dividendchown( name owner, name new_owner );
+
   private:
+
+    //prototypes of helper Functions   private??
+    void notify_front( uint8_t number );
+    void clearfront( void );
+    void proposaldestroy( void );
 
          // one hour in seconds (Computation: 60 minutes * 60 seconds)
         constexpr static uint32_t EXPIRATION_PERIOD = 60 * 60;
@@ -76,9 +90,11 @@ TABLE register_struct {
 
 //
 TABLE whitelist_struct {                  //!< whitelist_struct - Contains list of allowed proposers and voters along with their vote.
+      uint8_t  idno;                      // id number of VIP to distinct between proposer and voters
       name     user;                      //!< First user is a proposer, the others are voters
       uint8_t  vote;                      //!< 0 -n/a  1 - no   2 - yes /     - different than zero if already voted
       uint64_t primary_key() const { return user.value; }   //!< This table should be filled up only by a real multisig
+
     };
       using whitelist_index = eosio::multi_index<"whitelist"_n, whitelist_struct>;
 
@@ -87,5 +103,5 @@ TABLE status_messages { //Keep the error numbers list for the last proposal to r
       uint8_t  errorno;
       auto primary_key() const { return key; }
     };
-    typedef multi_index<name("messages"), messages> messages_table;
+    typedef multi_index<"messages"_n, messages> messages_table;
 };

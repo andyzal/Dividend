@@ -1,8 +1,8 @@
-// Last Edited: 1st Nov. by A.Zaliwski License: MIT
+// Last Edited: 11 Nov. by A.Zaliwski License: MIT.  The code is still in progress - may contain errors.
 #include <fredivregist.hpp>
 
 // Create whitelist
-    ACTION fredivregist::allowance( uint64_t key, name vipname ){
+    ACTION fredivregist::allowance( uint8_t key, name vipname ){  // key = 1 proposer key=2 voter key=3 second voter
       require_auth( get_self() );
 
       whitelist_index white_list(get_self(), get_self().value);
@@ -12,25 +12,23 @@
           {
             white_list.emplace(vipname, [&]( auto& row )
             {
-              row.key = key;
-              row.vip_user = vipname;
+              row.idno = key;
+              row.user = vipname;
               row.vote = 0;
             });
           }
           else {
             white_list.modify(iterator, vipname, [&]( auto& row ) {
-              row.key = key;
-              row.vip_user = vipname;
+              row.idno = key;
+              row.user = vipname;
               row.vote = 0;
              });
           }
     }
 
-
-
-      /*-------------------
-       +  proposal_create
-       +-------------------
+      /*---------------------
+       +  create new proposal
+       +---------------------
               +
               +  Proposal table is filled-up by the data coming from the frontend.
               +      - only valid proposer can create the proposal.
@@ -55,7 +53,7 @@
         check(white_list.find(proposer.value) == white_list.end(), " :( VIP_list: You have no rights to perform this operation!!");
         //check(expires_at > current_time_point_sec(), "expires_at must be a value in the future.");
         // Assume blank proposal_struct
-        const uint64_t key = 1;
+        const uint64_t key = 1;  //This was made assumming that will be more than one proposal (eventually use singleton)
         proposal_table proposals(get_self(), get_self().value);
         check(proposals.find(key) == proposals.end(), " :( A Proposal already exists");
         auto p = proposals.find(key);
@@ -73,27 +71,21 @@
                       p.locked              = locked;
                       p.expires_at = current_time_point_sec() + EXPIRATION_PERIOD;
            });
+           // Erase message table to make place for current errors.
+           clearfront();
         } //end of if
         // Notify voters using frontend when this proposal is submitted.
       } // --- end of proposal_create ---
 
-
       /*
        +-------------------
-       +  proposal_clear
+       +  proposalclr - destroy proposal
        +-------------------
                 +
-                +  Recycle RAM after proposal not longer needed.
-                +
+                +  Destroy proposal on proposer request. Recycle RAM.
+                +  Note: This not removes message messages_table
                 */
-// wrapper
 ACTION fredivregist::proposalclr( name proposer) {
-    require_auth(proposer);
-    proposaldestroy();
-}
-
-// enforced expiration of the proposal
-ACTION fredivregist::expire( name proposer ) {
     require_auth(proposer);
     // is proposer on white-list
     whitelist_index white_list(_self, _self.value);
@@ -103,25 +95,16 @@ ACTION fredivregist::expire( name proposer ) {
         notify_front( 1 );
         return;
     } else { //proposer accepted
-      // make proposal expired
-      proposal_table proposals(_self, _self.value);
-      const uint64_t key = 1;
-      auto itr = proposals.find(key);
-      check(itr != proposals.end(), "proposal not found.");
-      check(!itr->is_expired(), "proposal is already expired."); //???
-      proposals.modify(itr, proposer, [&](auto& row) {
-        row.expires_at = current_time_point_sec();
-      });
-    }
+        proposaldestroy();
+      };
 } //end of.
-
 
       /*
       +-------------------
-      +  proposal_vote
+      +  proposalvote - voting for proposal, finalize or reject, mint NFT.
       +-------------------
               +
-              +  Voting for the proposal. If this is last vote and both votes are positive, the proposal is written
+              +  Voting for the proposal. If both votes are positive, the proposal is written
               +  to the register. Otherwise the proposal will be destroyed.
               +
               */
@@ -134,7 +117,7 @@ ACTION fredivregist::expire( name proposer ) {
         whitelist_index white_list(_self, _self.value);
         auto v = white_list.find(voter.value);
         if ( v == white_list.end() ){ //wrong voter
-            eosio::printf("Error 1 (VIP_list): You do not have rights for this operation!!");
+            printf("Error 1 (VIP_list): You do not have rights for this operation!!");
             notify_front( 1 );
             return;
         }
@@ -154,12 +137,17 @@ ACTION fredivregist::expire( name proposer ) {
 
         //verify proposal approval or refusal
         //
-        uint8_t a, b;
-        v = white_list.begin()
-        v++; //ignore proposer  //Note this may not work due to issue in eosio
-        a = v->vote; //take first voter result
-        v++;
-        b = v->vote; //take second voter result
+        const uint8_t a, b;
+
+        for( auto iter=white_list.begin(); iter!=white_list.end; iter++ ) {
+          // ignore proposer iter->idno == 1
+          if( iter->idno == 2 ){ //take first voter result
+            a = iter->vote;
+          }
+          if( iter->idno == 3 ){ //take second voter result
+            b = iter->vote;
+          }
+        } // alternative solution for the above is to use get_index()
 
         if ( (a==1)||(b==1) ) { //proposal refused - destroy it :(
           proposaldestroy();
@@ -219,29 +207,42 @@ ACTION fredivregist::expire( name proposer ) {
               +
               */
 
-  ACTION fredivregist::dividdelivery( name dividend_acct ){
+  ACTION fredivregist::dividenddeliv( name dividend_acct ){
     require_auth(_self);
 
+    //TODO
+    register_table register(_self, _self.value);
+    for (auto iter = register.begin(); iter != register.end(); iter++)
+    {
+           // handle record
+           // ...
+    }
   } //end.
 
-
+  // Note: the above may not work due to 150ms transaction limitation. In that case altternative solution
+  // is more complicated:  Processing table page by page with keeping the lower and upper bound each time
+  // register_table register(_self, _self.value);
+  // auto idx = register.get_index<"byname"_n>();
+  // auto itr_start = idx.lower_bound(name("pending").value);
+  // auto itr_end = idx.upper_bound(name("pending").value);
+  // for (itr_start != itr_end; itr_start++)
+  //   {
+  //      // handle item record (they should all be of state "pending")
+  //   }
 
   ACTION fredivregist::dividendchown( name owner, name new_owner ){ // Change ownership
     //verify existence of owner account
     require_auth( owner );
     //verify existence of target (new owner) account
+    // Search register for owner - exit if not found
+
+
 
     //make Change
 
 
-    //Notify
-
-
-  }
-
-
-
-
+    //Notify whatever
+  } //end.
 
       //                        //
       // Small Helper Functions //
@@ -276,9 +277,5 @@ void fredivregist::proposaldestroy( void ){
     }
 }
 
-
-
-
-
-
-EOSIO_DISPATCH(fredivregist, (allowance)(proposalnew)(proposalclr))  //not finished TODO
+EOSIO_DISPATCH(fredivregist, (allowance)(proposalnew)(proposalclr)
+                             (proposalvote)(dividcomputed)(dividdelivery) )
