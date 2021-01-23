@@ -2,10 +2,10 @@
 #include <eosio/eosio.hpp>
 #include <eosio/system.hpp>
 #include <eosio/time.hpp>
-#include "eosio.token.hpp" 
+#include "freeos.hpp" 
 
 using namespace std;
-using namespace eosio; //fdsfdsfdsfd
+using namespace eosio; 
 
 CONTRACT fredivregist : public contract {
   public:
