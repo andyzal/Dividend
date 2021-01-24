@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-eosio-cpp -abigen fredivregist.cpp -o fredivregist.wasm
+eosio-cpp -abigen freeosdivide.cpp -o freeosdivide.wasm
 
 
