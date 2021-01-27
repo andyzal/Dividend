@@ -3,6 +3,7 @@
 #include <eosio/system.hpp>
 #include <eosio/time.hpp>
 #include "freeos.hpp" //Tom's file from airgrab
+#include "dividend.hpp"
 
 using namespace std;
 using namespace eosio; 
@@ -109,21 +110,21 @@ CONTRACT freeosdivide : public contract {
   using register_table = eosio::multi_index<"registers"_n, register_struct,
     indexed_by<"byacct"_n, const_mem_fun<register_struct, uint64_t, &register_struct::get_secondary_1>>>;      
 
-  // copies of declarations from freeos333333/freeostokens for inline operations -
-  struct [[eosio::table]] account {
-    asset    balance;
-    uint64_t primary_key()const { return balance.symbol.code().raw(); }
-  };
-
-  struct [[eosio::table]] currency_stats {
-    asset    supply;
-    asset    max_supply;
-    name     issuer;
-    uint64_t primary_key()const { return supply.symbol.code().raw(); }
-  };
-  typedef eosio::multi_index< "accounts"_n, account > accounts;
-  typedef eosio::multi_index< "stat"_n, currency_stats > stats;
-  // end of extra declarations
+  ///// copies of declarations from freeos333333/freeostokens for inline operations -
+  ///struct [[eosio::table]] account {
+  ///   asset    balance;
+  ///   uint64_t primary_key()const { return balance.symbol.code().raw(); }
+  ///};
+///
+///  struct [[eosio::table]] currency_stats {
+///    asset    supply;
+///    asset    max_supply;
+///    name     issuer;
+///    uint64_t primary_key()const { return supply.symbol.code().raw(); }
+///  };
+///  typedef eosio::multi_index< "accounts"_n, account > accounts;
+///  typedef eosio::multi_index< "stat"_n, currency_stats > stats;
+///  // end of extra declarations
  
 };
 

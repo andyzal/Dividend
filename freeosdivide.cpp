@@ -215,10 +215,13 @@ ACTION freeosdivide::proposalvote(  const name voter,
  
     // Read profit balance                                                         
     asset profit = asset(0,symbol("FREEOS",4) ); 
-    accounts accountstable("eosio.token"_n, get_self().value );
+    accounts accountstable(tokencontra, get_self().value );              //inline!   Token contract   (replaces "eosio.token"_n)
     const auto& ac=accountstable.get( symbol_code("FREEOS").raw() );
     profit = ac.balance; 
     print("profit_",profit); 
+
+    /// symbol_code freeos = symbol_code("FREEOS");
+    /// auto user_freeos_account = user_accounts.find(freeos.raw());
 
     // summary - Summarize weekly_percentage from all user's NFT's in one record for each user.
     // Only for eligible users (verify: accrued, threshold, etc.). 
@@ -389,23 +392,25 @@ ACTION freeosdivide::zerofortest()
     ACTION freeosdivide::regtransfer()
     {  
       // Just do the transfer to all eligible investors and founders.
-              
+      require_auth(_self);     
       total_index summary( get_self(), get_self().value );
       for (auto idx = summary.begin(); idx != summary.end(); idx++)
       {
-        name  user     = idx->user;
+        name user = idx->user;
         asset quantity = asset(0,symbol("FREEOS",4) ); 
         quantity = idx->to_receive; 
-
-        //Transfer the amount to all eligible stakeholders.
+        
         action dtransfer = action(
           permission_level{get_self(),"active"_n},
-          "freeos333333"_n,                                              //NOTE: token contract name      
+          name(freeos_acct),   
           "transfer"_n,
           std::make_tuple(get_self(), user, quantity, std::string("yours weekly dividend"))
         );
+        
         dtransfer.send();
+
       }
+      
       //All user's transfers done. Time to clear up the temporary table 'summary'.
       auto rc_itr =  summary.begin();
       while (rc_itr != summary.end()) 
@@ -414,29 +419,29 @@ ACTION freeosdivide::zerofortest()
       }
 
 
-      //Submit leftower tokens from freeosdivide to freeosdaodao: 
-      //read final (profit) balance after dividends payment:                                                          
-      asset profit   = asset(0,symbol("FREEOS",4) );  
-      accounts accountstable("eosio.token"_n, get_self().value );
-      const auto& ac=accountstable.get( symbol_code("FREEOS").raw() );
-      profit = ac.balance; 
-
-      asset quantity = asset(50000,symbol("FREEOS",4) );  
-      print("profit is _____", profit.amount); 
- 
-      asset to_receive = asset(profit.amount, symbol("FREEOS",4) ); 
-      to_receive = to_receive - quantity;
-  
-        print("**profit is _____", to_receive);
-            
-        action stransfer = action(
-           permission_level{get_self(),"active"_n},
-              "freeos333333"_n,                             //NOTE: token contract name                                                                                               
-              "transfer"_n,
-              std::make_tuple(get_self(), "freeosdaodao"_n, to_receive, std::string("yours weekly leftover"))
-           );
-        stransfer.send();  
-//      }  
+///      //Submit leftower tokens from freeosdivide to freeosdaodao: 
+///      //read final (profit) balance after dividends payment:                                                          
+///      asset profit   = asset(0,symbol("FREEOS",4) );  
+///      accounts accountstable(tokencontra, get_self().value );
+///      const auto& ac=accountstable.get( symbol_code("FREEOS").raw() );
+///      profit = ac.balance; 
+///
+///      asset quantity = asset(50000,symbol("FREEOS",4) );  
+///      print("profit is _____", profit.amount); 
+/// 
+///      asset to_receive = asset(profit.amount, symbol("FREEOS",4) ); 
+///      to_receive = to_receive - quantity;
+///  
+///        print("**profit is _____", to_receive);
+///            
+///        action stransfer = action(
+///              permission_level{get_self(),"active"_n},
+///              name(freeos_acct),                                                                                              
+///              "transfer"_n,
+///              std::make_tuple(get_self, daoaccount, to_receive, std::string("yours weekly leftover"))
+///           );
+///        stransfer.send();  
+/// //      }  
    }  //end of regtransfer.
 //-------------------------------------------------------------------------------------
 

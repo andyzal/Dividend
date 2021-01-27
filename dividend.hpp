@@ -1,5 +1,3 @@
-#include "freeos.hpp"       // Tom's file from airgrab
-
 // time limit for voting 
 constexpr static uint32_t EXPIRATION_PERIOD = 60 * 60;    // one hour in seconds 
 
@@ -20,6 +18,7 @@ constexpr static uint32_t EXPIRATION_PERIOD = 60 * 60;    // one hour in seconds
 // end of extra declarations
 
 // Account names used in the code: 
-  const name profitcontra  = "freeos333333"_n; // Profit contract (for inline transfers) - replace eosio.token for inlines 
+  const std::string freeos_acct = "freeos333333";
+  const name tokencontra   = "freeos333333"_n; // Token contract (for inline transfers) - replaces eosio.token for inlines 
   const name profitaccount = "freeosdivide"_n; // Here is stored profit to divide.
   const name daoaccount    = "freeosdaodao"_n; // Organizational target DAO account?
