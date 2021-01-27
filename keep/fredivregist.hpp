@@ -108,8 +108,7 @@ CONTRACT freeosdivide : public contract {
   };
   using register_table = eosio::multi_index<"registers"_n, register_struct,
     indexed_by<"byacct"_n, const_mem_fun<register_struct, uint64_t, &register_struct::get_secondary_1>>>;      
-
-  
+ 
  
 };
 

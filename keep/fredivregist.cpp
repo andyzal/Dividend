@@ -215,7 +215,7 @@ ACTION freeosdivide::proposalvote(  const name voter,
  
     // Read profit balance                                                         
     asset profit = asset(0,symbol("FREEOS",4) ); 
-    accounts accountstable("eosio.token"_n, get_self().value );
+    accounts accountstable(profitcontra, get_self().value );         //it was "eosio.token"_n 
     const auto& ac=accountstable.get( symbol_code("FREEOS").raw() );
     profit = ac.balance; 
     print("profit_",profit); 
@@ -417,7 +417,7 @@ ACTION freeosdivide::zerofortest()
       //Submit leftower tokens from freeosdivide to freeosdaodao: 
       //read final (profit) balance after dividends payment:                                                          
       asset profit   = asset(0,symbol("FREEOS",4) );  
-      accounts accountstable("eosio.token"_n, get_self().value );
+      accounts accountstable(profitcontra, get_self().value );               // replaces "eosio,token"_n 
       const auto& ac=accountstable.get( symbol_code("FREEOS").raw() );
       profit = ac.balance; 
 
