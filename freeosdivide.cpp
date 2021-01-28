@@ -57,6 +57,7 @@ whitelist_index white_list(get_self(), get_self().value);
 auto v = white_list.find(proposer.value);  // Is the proposer on the list?
 check( (v!=white_list.end()),                 "No proposer on the list?!"); 
 check( (v->idno==1),                          "On the list, but is not the proposer!"); 
+check( is_account( eosaccount ), "eosaccount does not exist"); 
 
 if (roi_target_cap==1) check( (rates_left>0), "Iteration Cap, but rates_left not above zero!");
 if (roi_target_cap!=1) { 
@@ -213,6 +214,10 @@ ACTION freeosdivide::proposalvote(  const name voter,
     register_table registers( get_self(), get_self().value );
     total_index    summary(   get_self(), get_self().value );
  
+
+
+
+
     // Read profit balance                                                         
     asset profit = asset(0,symbol("FREEOS",4) ); 
     accounts accountstable(tokencontra, get_self().value );              //inline!   Token contract   (replaces "eosio.token"_n)
@@ -256,6 +261,7 @@ ACTION freeosdivide::proposalvote(  const name voter,
                 summary.emplace( get_self(), [&]( auto& row )
                 {
                   row.user = user;
+                  row.to_receive = asset(0,symbol("FREEOS",4) ); //preformatting the table 
                   row.to_receive.amount = to_receive.amount;
                 });
               }
@@ -304,6 +310,7 @@ ACTION freeosdivide::proposalvote(  const name voter,
                 {
                   summary.emplace( get_self(), [&]( auto& row ){
                    row.user = user;
+                   row.to_receive = asset(0,symbol("FREEOS",4) ); //preformatting the table 
                    row.to_receive = to_receive;
                   });
                 }
@@ -337,6 +344,7 @@ ACTION freeosdivide::proposalvote(  const name voter,
                 {
                   summary.emplace( get_self(), [&]( auto& row ){
                    row.user = user;
+                   row.to_receive = asset(0,symbol("FREEOS",4) ); //preformatting the table 
                    row.to_receive = to_receive;
                   });
                 }
@@ -355,7 +363,7 @@ ACTION freeosdivide::proposalvote(  const name voter,
     }
  
 
-ACTION freeosdivide::zerofortest()
+ACTION freeosdivide::zerofortest()   
 {   
     //used for TESTS only - remove later. This is to clean up the results of previous tests.
     require_auth(get_self());
@@ -372,10 +380,10 @@ ACTION freeosdivide::zerofortest()
     for( auto iter=summary.begin(); iter!=summary.end(); iter++ ){
          summary.modify(iter, get_self(), [&]( auto& row )
          {
-           row.to_receive = asset(0,symbol("FREEOS",4) );
+           row.to_receive = asset(0,symbol("FREEOS",4) ); //preformatting the table 
          }); 
     }  
-} // used for TESTS only - remove later 
+} // end of test 
 
 
 
@@ -396,19 +404,20 @@ ACTION freeosdivide::zerofortest()
       total_index summary( get_self(), get_self().value );
       for (auto idx = summary.begin(); idx != summary.end(); idx++)
       {
+
         name user = idx->user;
         asset quantity = asset(0,symbol("FREEOS",4) ); 
         quantity = idx->to_receive; 
         
-        action dtransfer = action(
-          permission_level{get_self(),"active"_n},
-          name(freeos_acct),   
-          "transfer"_n,
-          std::make_tuple(get_self(), user, quantity, std::string("yours weekly dividend"))
-        );
-        
-        dtransfer.send();
-
+        if(quantity.amount>0){
+          action dtransfer = action(
+            permission_level{get_self(),"active"_n},
+            name(freeos_acct),   
+            "transfer"_n,
+            std::make_tuple(get_self(), user, quantity, std::string("yours weekly dividend"))
+          );
+          dtransfer.send();
+        }
       }
       
       //All user's transfers done. Time to clear up the temporary table 'summary'.
