@@ -213,10 +213,6 @@ ACTION freeosdivide::proposalvote(  const name voter,
     require_auth(_self);
     register_table registers( get_self(), get_self().value );
     total_index    summary(   get_self(), get_self().value );
- 
-
-
-
 
     // Read profit balance                                                         
     asset profit = asset(0,symbol("FREEOS",4) ); 
@@ -362,31 +358,6 @@ ACTION freeosdivide::proposalvote(  const name voter,
       }    //end of for.  
     }
  
-
-ACTION freeosdivide::zerofortest()   
-{   
-    //used for TESTS only - remove later. This is to clean up the results of previous tests.
-    require_auth(get_self());
-
-    register_table registers( get_self(), get_self().value );
-    for( auto ite=registers.begin(); ite!=registers.end(); ite++ ){
-         registers.modify(ite, get_self(), [&]( auto& row1 )
-         {
-           row1.accrued = asset(0,symbol("FREEOS",4) );
-         }); 
-    }  
-
-    total_index summary( get_self(), get_self().value );
-    for( auto iter=summary.begin(); iter!=summary.end(); iter++ ){
-         summary.modify(iter, get_self(), [&]( auto& row )
-         {
-           row.to_receive = asset(0,symbol("FREEOS",4) ); //preformatting the table 
-         }); 
-    }  
-} // end of test 
-
-
-
     /*
      +---------------------------------
      +  regtransfer - dividend transfer
@@ -397,10 +368,10 @@ ACTION freeosdivide::zerofortest()
              +  At the end the summary table must be erased. 
              +
              */
-    ACTION freeosdivide::regtransfer()
+    ACTION freeosdivide::regtransfer()    //This header should be removed in final version to make one action with the above action.
     {  
       // Just do the transfer to all eligible investors and founders.
-      require_auth(_self);     
+      require_auth(_self);                                                      //to remove later 
       total_index summary( get_self(), get_self().value );
       for (auto idx = summary.begin(); idx != summary.end(); idx++)
       {
@@ -427,34 +398,53 @@ ACTION freeosdivide::zerofortest()
          rc_itr =  summary.erase(rc_itr);
       }
 
+      //Submit leftower tokens from freeosdivide to freeosdaodao: 
+      //read final (profit) balance after dividends payment:                                                          
+      asset profit   = asset(0,symbol("FREEOS",4) );  
+      accounts accountstable(tokencontra, get_self().value );
+      const auto& ac=accountstable.get( symbol_code("FREEOS").raw() );
+      profit = ac.balance; 
 
-///      //Submit leftower tokens from freeosdivide to freeosdaodao: 
-///      //read final (profit) balance after dividends payment:                                                          
-///      asset profit   = asset(0,symbol("FREEOS",4) );  
-///      accounts accountstable(tokencontra, get_self().value );
-///      const auto& ac=accountstable.get( symbol_code("FREEOS").raw() );
-///      profit = ac.balance; 
-///
-///      asset quantity = asset(50000,symbol("FREEOS",4) );  
-///      print("profit is _____", profit.amount); 
-/// 
-///      asset to_receive = asset(profit.amount, symbol("FREEOS",4) ); 
-///      to_receive = to_receive - quantity;
-///  
-///        print("**profit is _____", to_receive);
-///            
-///        action stransfer = action(
-///              permission_level{get_self(),"active"_n},
-///              name(freeos_acct),                                                                                              
-///              "transfer"_n,
-///              std::make_tuple(get_self, daoaccount, to_receive, std::string("yours weekly leftover"))
-///           );
-///        stransfer.send();  
-/// //      }  
+      asset quantity = asset(50000,symbol("FREEOS",4) );  //Keep 5 tokens for eventual CPU. RAM payments ??
+      print("profit is _____", profit.amount); 
+ 
+      asset to_receive = asset(profit.amount, symbol("FREEOS",4) ); 
+      to_receive = to_receive - quantity;
+  
+      print("**profit is _____", to_receive);
+            
+      action stransfer = action(
+             permission_level{get_self(),"active"_n},
+             name(freeos_acct),                                                                                              
+             "transfer"_n,
+             std::make_tuple(get_self(), daoaccount, to_receive, std::string("yours weekly leftover"))
+      );
+      stransfer.send();  
+      //      }  
    }  //end of regtransfer.
 //-------------------------------------------------------------------------------------
 
+ACTION freeosdivide::zerofortest()   
+{   
+    //used for TESTS only - remove later. This is to clean up the results of previous tests.
+    require_auth(get_self());
 
+    register_table registers( get_self(), get_self().value );
+    for( auto ite=registers.begin(); ite!=registers.end(); ite++ ){
+         registers.modify(ite, get_self(), [&]( auto& row1 )
+         {
+           row1.accrued = asset(0,symbol("FREEOS",4) );
+         }); 
+    }  
+
+    total_index summary( get_self(), get_self().value );
+    for( auto iter=summary.begin(); iter!=summary.end(); iter++ ){
+         summary.modify(iter, get_self(), [&]( auto& row )
+         {
+           row.to_receive = asset(0,symbol("FREEOS",4) ); //preformatting the table 
+         }); 
+    }  
+} // end of test 
 
 //-----------------------------------------------------------------------------------------------------------------
 //Clean up mess after tests - need to have variable scope :)

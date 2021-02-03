@@ -48,12 +48,12 @@ CONTRACT freeosdivide : public contract {
       return time_point_sec(current_time_point());
     }
 
-    constexpr static uint32_t EXPIRATION_PERIOD = 60 * 60;    // one hour in seconds (Computation: 60 minutes * 60 seconds)
+    //TODO constexpr static uint32_t EXPIRATION_PERIOD = 60 * 60;    // one hour in seconds (Computation: 60 minutes * 60 seconds)
     uint32_t now() {
       return current_time_point().sec_since_epoch();
     }
 
-  TABLE status_messages {                 // This keepd the error numbers for the latest proposal to be interpreted by the frontend. 
+  TABLE status_messages {                 // This keep the error numbers for the latest proposal to be interpreted by the frontend. 
                                           // New proposal erases this list.
     uint64_t key;
     uint8_t  errorno;

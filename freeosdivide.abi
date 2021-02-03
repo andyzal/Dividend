@@ -1,0 +1,361 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.1",
+    "types": [],
+    "structs": [
+        {
+            "name": "allowance",
+            "base": "",
+            "fields": [
+                {
+                    "name": "code",
+                    "type": "uint8"
+                },
+                {
+                    "name": "vipname",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "clear",
+            "base": "",
+            "fields": [
+                {
+                    "name": "tscope",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "dividcomputed",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "proposal_struct",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "uint64"
+                },
+                {
+                    "name": "eosaccount",
+                    "type": "name"
+                },
+                {
+                    "name": "roi_target_cap",
+                    "type": "uint8"
+                },
+                {
+                    "name": "weekly_percentage",
+                    "type": "float64"
+                },
+                {
+                    "name": "locked",
+                    "type": "bool"
+                },
+                {
+                    "name": "expires_at",
+                    "type": "uint32"
+                },
+                {
+                    "name": "threshold",
+                    "type": "asset"
+                },
+                {
+                    "name": "rates_left",
+                    "type": "uint32"
+                },
+                {
+                    "name": "accrued",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "proposalnew",
+            "base": "",
+            "fields": [
+                {
+                    "name": "proposer",
+                    "type": "name"
+                },
+                {
+                    "name": "eosaccount",
+                    "type": "name"
+                },
+                {
+                    "name": "roi_target_cap",
+                    "type": "uint8"
+                },
+                {
+                    "name": "weekly_percentage",
+                    "type": "float64"
+                },
+                {
+                    "name": "threshold",
+                    "type": "asset"
+                },
+                {
+                    "name": "rates_left",
+                    "type": "uint32"
+                },
+                {
+                    "name": "locked",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "proposalvote",
+            "base": "",
+            "fields": [
+                {
+                    "name": "voter",
+                    "type": "name"
+                },
+                {
+                    "name": "vote",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
+            "name": "regchown",
+            "base": "",
+            "fields": [
+                {
+                    "name": "userfrom",
+                    "type": "name"
+                },
+                {
+                    "name": "userto",
+                    "type": "name"
+                },
+                {
+                    "name": "nft_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "register_struct",
+            "base": "",
+            "fields": [
+                {
+                    "name": "nft_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "eosaccount",
+                    "type": "name"
+                },
+                {
+                    "name": "roi_target_cap",
+                    "type": "uint8"
+                },
+                {
+                    "name": "weekly_percentage",
+                    "type": "float64"
+                },
+                {
+                    "name": "mint_date",
+                    "type": "time_point_sec"
+                },
+                {
+                    "name": "locked",
+                    "type": "bool"
+                },
+                {
+                    "name": "threshold",
+                    "type": "asset"
+                },
+                {
+                    "name": "rates_left",
+                    "type": "uint32"
+                },
+                {
+                    "name": "accrued",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "regtransfer",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "removeallow",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "status_messages",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "uint64"
+                },
+                {
+                    "name": "errorno",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
+            "name": "total_struct",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                },
+                {
+                    "name": "to_receive",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "votesreset11",
+            "base": "",
+            "fields": [
+                {
+                    "name": "user",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "whitelist_struct",
+            "base": "",
+            "fields": [
+                {
+                    "name": "idno",
+                    "type": "uint64"
+                },
+                {
+                    "name": "user",
+                    "type": "name"
+                },
+                {
+                    "name": "vote",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
+            "name": "zerofortest",
+            "base": "",
+            "fields": []
+        }
+    ],
+    "actions": [
+        {
+            "name": "allowance",
+            "type": "allowance",
+            "ricardian_contract": "<h2>Creates whitelist</h2>>\n\n**PARAMETERS:** \n* __key__ this is 1- for proposer, 2- for first voter, 3-for second voter.\n* __vipname__ related proposer or voter account which will be used later for identification of proposer or voter.\n\n**INTENT:** The intent of {{ allowance }} is to create a list of priviledged proposers and voters to create and accept the further proposals.  \n\n**TERM:** The priviledged proposers and voters table allowed to deal with proposals is created only from command line and requires multisig."
+        },
+        {
+            "name": "clear",
+            "type": "clear",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "dividcomputed",
+            "type": "dividcomputed",
+            "ricardian_contract": "<h2>dividend computed</h2>\n\n**PARAMETERS:** \nNo parameters - Its used NFT register internally to verify dividend eligibility and to create totals for all the shares of a given investor/founder. \n\n**INTENT:** The intent of {{ dividcomputed }} is to pre-count all dividend eligibility for each set of NFTs belonging to a given founder/investor.  This action will be run once a week.\n\n**TERM:**   N/A"
+        },
+        {
+            "name": "proposalnew",
+            "type": "proposalnew",
+            "ricardian_contract": "<h2>create new proposal</h2>\n\n**PARAMETERS:** \n* __proposer__ has right to initiate new proposal \n* __eosaccount_ the dividend target account for founder or investor\n* __roi_target_cap__ Value 1,2 or3. Itis 1-(I)teration, 2-(H)orizontal, or 3 for (V)ertical cap. \n(* __expires_at__ proposal expiration time (default one hour). After that time proposal is cancelled and cannot be voted. Actually, used internally).\n* __weekly_percentage__ of dividend transrerred into __eosaccount__ this week round\n* __threshold__ different meaning depend on \"roi_target_cap\"=1 countdown counter of rounds to pay,  if 3 - the highest amount of dividend to pay this week\n* __accrued__  total sum of dividends up-to-date - used only when roi_target_cap=2; if accrued>=threshold -> stop-pay \n* __locked__ temporary lock for new founders (can be used only once)\n\n**INTENT:** The intent of [[proposalnew ]] is to create a new proposal introducing a new investor or founder to the register - When proposal is accepted the investor of founder receives NFT stored as register entry (NFT-Non Fungible Token) allowing to receive weekly pre-defined profit-based dividend.  The notification of a new proposal should be emailed to both voters by the frontend. The proposer account is priviledged (VIP) account. \n\n**TERM:** The proposal must be accepted by pre-defined voters not later than one hour from its issue, otherwise will be destroyed."
+        },
+        {
+            "name": "proposalvote",
+            "type": "proposalvote",
+            "ricardian_contract": "<h2>vote on proposal</h2>\n\n**PARAMETERS:** \n* __voter__ is accountname (must be whitelisted) of a voter for identification\n* __vote__ is a value of a vote ( 0-didn't voted yet or ignored, 1-no, 2-yes). \n       \n**INTENT:** The intent of proposalvote is to accept (or not) the issued proposal. If proposal will be accepted by both pre-defined priviledged voters, it will be copied to investor/founder register and NFT will be minted. From this moment investor/voter will be eligible to receive policy based share from dividends. \nOtherwise, proposal not accepted by voters, will be destroyed. \n\n**TERM:**  Voters have one hour (counted from proposal issue) to take the decision on proposal acceptance."
+        },
+        {
+            "name": "regchown",
+            "type": "regchown",
+            "ricardian_contract": "**PARAMETERS:** \n\n* __owner__ current NFT owner \n* __new_owner__ new NFT owner \n* __nftid__ NFT_id must be received from the front-end\n\n**INTENT:** The intent of regchown is to allow changes in NFT ownership (e.g. only by inheritance or gift). \n\n**TERM:**  TBA"
+        },
+        {
+            "name": "regtransfer",
+            "type": "regtransfer",
+            "ricardian_contract": "Note: In production version this action code becomes part of dividcomputed action \n**PARAMETERS:** \n* __dividend_acct__ this is account keeping all the pool of received profits. For now must be identical with the account on which this contract is installed. \n* __freeos_acct__ the profit not distributed to founders/investors will be transferd to this account.\n\n**INTENT:** The intent of regtransfer is to make pre-counted dividend transfer to the founders and investors from the NFT register with values proportional to their  NFTs owned. The remaining, not distributed part of the profit will be transfered to FreeDAO account.\nNote: If there will be any special/target/purpose FreeDAO accounts to receive part of their dividend it must be registered the same way like other accounts (by creating and accepting proposal).\n\n**TERM:** These terms and conditions are defined by the other documents."
+        },
+        {
+            "name": "removeallow",
+            "type": "removeallow",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "votesreset11",
+            "type": "votesreset11",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "zerofortest",
+            "type": "zerofortest",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "messages",
+            "type": "status_messages",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "proposals",
+            "type": "proposal_struct",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "registers",
+            "type": "register_struct",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "totals",
+            "type": "total_struct",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "whitelist",
+            "type": "whitelist_struct",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [
+        {
+            "id": "ENTIRE AGREEMENT",
+            "body": "This contract contains the entire agreement of the parties, for all described actions, and there are no other promises or conditions in any other agreement whether oral or written concerning the subject matter of this Contract. This contract supersedes any prior written or oral agreements between the parties. - not implemented - to consider"
+        },
+        {
+            "id": "BINDING CONSTITUTION",
+            "body": "All the the action descibed in this contract are subject to the consitution as held at vvv . This includes, but is not limited to membership terms and condiutions, dispute resolution and severability. Not implemented - to consider."
+        },
+        {
+            "id": "OVERALL FUNCTION",
+            "body": "not implemented"
+        }
+    ],
+    "variants": []
+}
